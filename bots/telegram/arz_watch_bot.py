@@ -94,8 +94,7 @@ class ArzWatchBot:
             response = requests.post(api_url, json=payload, headers=headers)
             if response.status_code == 201:
                 self.logger.info("✅ Successfully saved user info.")
-            else:
-                self.logger.error(f"❌ Error saving user info: {response.text}")
+
         except Exception as e:
             self.logger.error(f"❌ Exception during user info save: {e}")
 
