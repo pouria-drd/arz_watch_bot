@@ -83,6 +83,7 @@ class ArzWatchBot:
             "first_name": first_name,
             "last_name": last_name,
             "is_bot": user.is_bot,
+            "phone_number": getattr(user, "phone_number", ""),
             "language_code": getattr(user, "language_code", ""),
             "last_seen": update.message.date.isoformat(),
         }
@@ -117,10 +118,22 @@ class ArzWatchBot:
         """
         headers = {"Authorization": f"Api-Key {self.api_key}"}
         api_url = f"{self.base_api_url}/scrapers/{self.extractor}/{endpoint}/"
+
+        user = update.effective_user
+
+        payload = {
+            "user_id": user.id,
+        }
         try:
-            response = requests.get(api_url, timeout=self.timeout, headers=headers)
+            response = requests.post(
+                api_url, json=payload, timeout=self.timeout, headers=headers
+            )
+
             if response.status_code != 200:
-                raise Exception(f"Non-200 status code: {response.status_code}")
+                await update.message.reply_text(
+                    "❌شما نمی‌توانید درخواست جدیدی داشته باشید!", parse_mode="HTML"
+                )
+                return
 
             data = response.json()
             items = data.get("data", [])
