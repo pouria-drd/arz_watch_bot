@@ -54,6 +54,8 @@ class ArzWatchBot:
         """Register all command handlers."""
         self.app.add_handler(CommandHandler("start", self._handle_start))
         self.app.add_handler(CommandHandler("help", self._handle_help))
+        self.app.add_handler(CommandHandler("usage", self._handle_usage))
+
         self.app.add_handler(CommandHandler("gold", self._handle_gold))
         self.app.add_handler(CommandHandler("coin", self._handle_coin))
         self.app.add_handler(CommandHandler("currency", self._handle_currency))
@@ -105,6 +107,44 @@ class ArzWatchBot:
         """Handle /help command."""
         await update.message.reply_text(messages.help(), parse_mode="HTML")
 
+    async def _handle_usage(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
+        """Handle /usage command."""
+
+        headers = {"Authorization": f"Api-Key {self.api_key}"}
+        api_url = f"{self.base_api_url}/telegram/user-info/"
+        tg_user = update.effective_user
+
+        payload = {
+            "user_id": tg_user.id,
+        }
+
+        try:
+            response = requests.post(api_url, json=payload, headers=headers)
+            if response.status_code == 200:
+                self.logger.info("✅ Successfully retrieved user info.")
+                user = response.json()
+                await update.message.reply_text(
+                    messages.usage(
+                        tg_user,
+                        user["request_count"],
+                        user["max_request_count"],
+                        user["created_at"],
+                    ),
+                    parse_mode="HTML",
+                )
+
+            else:
+                self.logger.error(
+                    f"❌ Error retrieving user info: {response.status_code}"
+                )
+                await update.message.reply_text(messages.error(), parse_mode="HTML")
+
+        except Exception as e:
+            self.logger.error(f"❌ Exception during user info save: {e}")
+            await update.message.reply_text(messages.error(), parse_mode="HTML")
+
     async def _fetch_and_reply(
         self, update: Update, endpoint: str, formatter_func
     ) -> None:
@@ -137,7 +177,7 @@ class ArzWatchBot:
 
             data = response.json()
             items = data.get("data", [])
-            retrieved_at = datetime.fromisoformat(data.get("retrievedAt", "N/A"))
+            retrieved_at = datetime.fromisoformat(data.get("retrieved_at", "N/A"))
 
             if not items:
                 raise ValueError("No data returned.")

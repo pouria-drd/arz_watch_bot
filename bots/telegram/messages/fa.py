@@ -1,7 +1,10 @@
-from zoneinfo import ZoneInfo
-from persiantools.jdatetime import JalaliDateTime
+from telegram import User
+from datetime import datetime
+from typing import Union, List, Dict
+from bots.utils import build_item_section, persian_date_time, time_until_midnight_tehran
 
 
+# === Message Templates === #
 def welcome(username: str, total_users: int) -> str:
     return f"""
 سلام 👋 <b>{username}</b> عزیز!  
@@ -24,90 +27,40 @@ def help() -> str:
 /coin - قیمت سکه
 /crypto - قیمت ارز دیجیتال
 /currency - قیمت ارزها
+/usage - نمایش اطلاعات مصرفی
 /help - نمایش همین راهنما  
 
 💡 همه‌ی اطلاعات از منابع معتبر و به‌روز جمع‌آوری میشه و ربات هر چند دقیقه یکبار آپدیت میشه!
 """
 
 
-def gold(golds, last_updated) -> str:
-    # Convert UTC to Tehran timezone
-    tehran_time = last_updated.astimezone(ZoneInfo("Asia/Tehran"))
-    jalali_time = JalaliDateTime.to_jalali(tehran_time)
-
-    persian_date = jalali_time.strftime("%d %B %Y", locale="fa")
-    persian_time = jalali_time.strftime("%H:%M", locale="fa")
-
-    response = f"""
+def gold(golds: List[Dict[str, str]], last_updated: datetime) -> str:
+    date, time = persian_date_time(last_updated)
+    body = "\n".join([build_item_section(gold) for gold in golds])
+    return f"""
 <b>📊 قیمت طلا</b>
 
-🗓️ <b>{persian_date}</b> ⏰ <b>{persian_time}</b>
+🗓️ <b>{date}</b> ⏰ <b>{time}</b>
 ———————————————
+{body}
 """
-    for gold in golds:
-        fa_title = gold["title"]
-        # Format the price with commas
-        formatted_price = "{:,}".format(int(int(gold["price"]) / 10))
-
-        # Check if the change is negative or positive
-        change_symbol = "📉" if int(gold["changeAmount"]) < 0 else "📈"
-
-        # Adding the gold data to the response
-        response += f"""
-🔹 <b>{fa_title}</b>
-💰 <b>قیمت:</b> <code>{formatted_price}</code> تومان
-{change_symbol} <b>مقدار تغییر:</b> <code>{gold['changeAmount']}</code>
-{change_symbol} <b>درصد تغییر:</b> <code>{gold['changePercentage']}</code>
-———————————————
-"""
-    return response
 
 
-def coin(coins, last_updated) -> str:
-    # Convert UTC to Tehran timezone
-    tehran_time = last_updated.astimezone(ZoneInfo("Asia/Tehran"))
-    jalali_time = JalaliDateTime.to_jalali(tehran_time)
-
-    persian_date = jalali_time.strftime("%d %B %Y", locale="fa")
-    persian_time = jalali_time.strftime("%H:%M", locale="fa")
-
-    response = f"""
+def coin(coins: List[Dict[str, str]], last_updated: datetime) -> str:
+    date, time = persian_date_time(last_updated)
+    body = "\n".join([build_item_section(coin) for coin in coins])
+    return f"""
 <b>📊 قیمت سکه</b>
 
-🗓️ <b>{persian_date}</b> ⏰ <b>{persian_time}</b>
+🗓️ <b>{date}</b> ⏰ <b>{time}</b>
 ———————————————
-"""
-    for coin in coins:
-        fa_title = coin["title"]
-
-        # Format the price with commas
-        formatted_price = "{:,}".format(int(int(coin["price"]) / 10))
-
-        # Check if the change is negative or positive
-        change_symbol = "📉" if int(coin["changeAmount"]) < 0 else "📈"
-
-        # Adding the coin data to the response
-        response += f"""
-🔹 <b>{fa_title}</b>
-💰 <b>قیمت:</b> <code>{formatted_price}</code> تومان
-{change_symbol} <b>مقدار تغییر:</b> <code>{coin['changeAmount']}</code>
-{change_symbol} <b>درصد تغییر:</b> <code>{coin['changePercentage']}</code>
-———————————————
+{body}
 """
 
-    return response
 
-
-def currency(currencies, last_updated) -> str:
-    # Convert UTC to Tehran timezone
-    tehran_time = last_updated.astimezone(ZoneInfo("Asia/Tehran"))
-    jalali_time = JalaliDateTime.to_jalali(tehran_time)
-
-    persian_date = jalali_time.strftime("%d %B %Y", locale="fa")
-    persian_time = jalali_time.strftime("%H:%M", locale="fa")
-
-    # Flag mapping
-    flag_map = {
+def currency(currencies: List[Dict[str, str]], last_updated: datetime) -> str:
+    date, time = persian_date_time(last_updated)
+    flags = {
         "دلار": "🇺🇸",
         "یورو": "🇪🇺",
         "درهم امارات": "🇦🇪",
@@ -116,32 +69,70 @@ def currency(currencies, last_updated) -> str:
         "یوان چین": "🇨🇳",
         "روبل روسیه": "🇷🇺",
     }
-
-    response = f"""
+    body = "\n".join(
+        [
+            build_item_section(currency, flag=flags.get(currency["title"], "🏳️"))
+            for currency in currencies
+        ]
+    )
+    return f"""
 <b>📊 قیمت ارزها</b>
 
-🗓️ <b>{persian_date}</b> ⏰ <b>{persian_time}</b>
+🗓️ <b>{date}</b> ⏰ <b>{time}</b>
 ———————————————
+{body}
 """
-    for currency in currencies:
-        fa_title = currency["title"]
-
-        flag = flag_map.get(fa_title, "🏳️")  # Default flag if not found
-        # Format the price with commas
-        formatted_price = "{:,}".format(int(int(currency["price"]) / 10))
-        # Check if the change is negative or positive
-        change_symbol = "📉" if int(currency["changeAmount"]) < 0 else "📈"
-        # Adding the currency data to the response
-        response += f"""
-🔹 <b>{fa_title}</b> {flag}
-💰 <b>قیمت:</b> <code>{formatted_price}</code> تومان
-{change_symbol} <b>مقدار تغییر:</b> <code>{currency['changeAmount']}</code>
-{change_symbol} <b>درصد تغییر:</b> <code>{currency['changePercentage']}</code>
-———————————————
-"""
-
-    return response
 
 
 def error() -> str:
-    return "❌ خطای داخلی. لطفا دوباره امتحان کن."
+    return "❌ خطایی رخ داد! لطفا دوباره امتحان کنید."
+
+
+def usage(
+    user: User,
+    request_count: Union[str, int],
+    max_request_count: Union[str, int],
+    created_at: datetime,
+) -> str:
+    name = user.first_name or user.name.strip("@")
+    persian_date, persian_time = persian_date_time(created_at)
+
+    # Normalize counts
+    request_count = int(request_count)
+    max_request_count = int(max_request_count)
+    percent = int((request_count / max_request_count) * 100)
+
+    # Emoji indicator based on usage level
+    if percent < 40:
+        usage_emoji = "🟢"
+    elif percent < 70:
+        usage_emoji = "🟡"
+    elif percent < 90:
+        usage_emoji = "🟠"
+    else:
+        usage_emoji = "🔴"
+
+    # Warning message
+    if percent >= 100:
+        warning = "⛔ <b>شما به سقف مجاز امروز رسیدید !</b>"
+    elif percent >= 90:
+        warning = "🚨 <b>شما به سقف مجاز امروز نزدیک شده‌اید!</b>"
+    elif percent >= 70:
+        warning = "⚠️ <b>در حال نزدیک شدن به سقف مجاز هستید.</b>"
+    else:
+        warning = ""
+
+    return f"""
+خیلی خوشحالیم که از ربات ما استفاده می‌کنی <b>{name}</b> !
+
+اطلاعات مصرفی شما:
+
+{usage_emoji} <b>درصد مصرف:</b> <code>{percent}%</code>
+📊 <b>تعداد درخواست امروز:</b> <code>{request_count}</code> از <code>{max_request_count}</code>
+🗓️تاریخ عضویت: <b>{persian_date}</b> ⏰ <b>{persian_time}</b>
+
+{warning}
+"""
+
+
+# ⏳ <b>زمان باقی‌مانده تا ریست:</b> {time_until_midnight_tehran()}
