@@ -4,6 +4,11 @@ from datetime import datetime, timedelta
 from persiantools.jdatetime import JalaliDateTime
 
 
+def parse_percentage(value: str) -> float:
+    res = value.strip("%").replace("+", "").replace(",", "")
+    return float(res)
+
+
 def format_price(value: Union[str, int]) -> str:
     """
     Formats a given price value to include commas.
@@ -17,17 +22,17 @@ def format_price(value: Union[str, int]) -> str:
     return f"{int(int(value) / 10):,}"
 
 
-def get_change_symbol(change_amount: Union[str, int]) -> str:
+def get_change_symbol(change_amount: Union[str, float]) -> str:
     """
     Returns the appropriate change symbol based on the given change amount.
 
     Args:
-        change_amount (Union[str, int]): The change amount to check.
+        change_amount (Union[str, float]): The change amount to check.
 
     Returns:
         str: The change symbol. Example: "📉" or "📈".
     """
-    return "📉" if int(change_amount) < 0 else "📈"
+    return "📉" if float(change_amount) < 0 else "📈"
 
 
 def build_item_section(item: Dict[str, str], flag: str = "") -> str:

@@ -26,7 +26,6 @@ class ArzWatchBot:
         token: str,
         api_key: str,
         timeout: int = 30,
-        extractor: str = "tgju",
     ):
         # Validate input parameters
         if not base_api_url:
@@ -40,7 +39,6 @@ class ArzWatchBot:
         self.api_key = api_key
         self.token = token
         self.timeout = timeout
-        self.extractor = extractor
 
         self.logger = LoggerFactory.get_logger(
             "ArzWatchBot", "bots/telegram/arz_watch_bot"
@@ -58,6 +56,7 @@ class ArzWatchBot:
 
         self.app.add_handler(CommandHandler("gold", self._handle_gold))
         self.app.add_handler(CommandHandler("coin", self._handle_coin))
+        self.app.add_handler(CommandHandler("crypto", self._handle_crypto))
         self.app.add_handler(CommandHandler("currency", self._handle_currency))
 
     async def _handle_start(
@@ -157,7 +156,7 @@ class ArzWatchBot:
             formatter_func (Callable): Function to format the response message.
         """
         headers = {"Authorization": f"Api-Key {self.api_key}"}
-        api_url = f"{self.base_api_url}/scrapers/{self.extractor}/{endpoint}/"
+        api_url = f"{self.base_api_url}/scrapers/{endpoint}/"
 
         user = update.effective_user
 
@@ -193,19 +192,25 @@ class ArzWatchBot:
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ) -> None:
         """Handle /gold command."""
-        await self._fetch_and_reply(update, "gold", messages.gold)
+        await self._fetch_and_reply(update, "tgju/gold", messages.gold)
 
     async def _handle_coin(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ) -> None:
         """Handle /coin command."""
-        await self._fetch_and_reply(update, "coin", messages.coin)
+        await self._fetch_and_reply(update, "tgju/coin", messages.coin)
+
+    async def _handle_crypto(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
+        """Handle /crypto command."""
+        await self._fetch_and_reply(update, "coinex/crypto", messages.crypto)
 
     async def _handle_currency(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ) -> None:
         """Handle /currency command."""
-        await self._fetch_and_reply(update, "currency", messages.currency)
+        await self._fetch_and_reply(update, "tgju/currency", messages.currency)
 
     async def _handle_error(
         self, update: object, context: ContextTypes.DEFAULT_TYPE

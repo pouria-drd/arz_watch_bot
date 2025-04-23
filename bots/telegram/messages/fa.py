@@ -1,7 +1,13 @@
 from telegram import User
 from datetime import datetime
 from typing import Union, List, Dict
-from bots.utils import build_item_section, persian_date_time, time_until_midnight_tehran
+from bots.utils import (
+    build_item_section,
+    persian_date_time,
+    get_change_symbol,
+    parse_percentage,
+    time_until_midnight_tehran,
+)
 
 
 # === Message Templates === #
@@ -77,6 +83,30 @@ def currency(currencies: List[Dict[str, str]], last_updated: datetime) -> str:
     )
     return f"""
 <b>📊 قیمت ارزها</b>
+
+🗓️ <b>{date}</b> ⏰ <b>{time}</b>
+———————————————
+{body}
+"""
+
+
+def crypto(coins: List[Dict[str, str]], last_updated: datetime) -> str:
+    date, time = persian_date_time(last_updated)
+    body = "\n".join(
+        [
+            f"""
+💰 <b>{coin['name_fa']}</b> <code>({coin['symbol']})</code>
+💵 قیمت: <code>{coin['price_usd']} دلار</code>
+{get_change_symbol(parse_percentage(coin['change_24h']))} تغییرات ۲۴ساعته: <code>{coin['change_24h']}</code>
+💰 مارکت کپ: <code>{coin['market_cap']}</code>
+📊 حجم معاملات ۲۴ساعته: <code>{coin['volume_24h']}</code>
+———————————————
+"""
+            for coin in coins
+        ]
+    )
+    return f"""
+<b>📊 قیمت ارز دیجیتال</b>
 
 🗓️ <b>{date}</b> ⏰ <b>{time}</b>
 ———————————————
