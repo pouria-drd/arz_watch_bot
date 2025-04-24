@@ -19,8 +19,9 @@ def main():
         token=TELEGRAM_BOT_TOKEN,
         base_api_url=BASE_API_URL,
         api_key=API_ACCESS_KEY,
-        timeout=TELEGRAM_BOT_TIMEOUT,
+        timeout=int(TELEGRAM_BOT_TIMEOUT),
     )
+
     # Run the bot
     bot.run()
 
