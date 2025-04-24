@@ -204,7 +204,7 @@ class ArzWatchBot:
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ) -> None:
         """Handle /crypto command."""
-        await self._fetch_and_reply(update, "coinex/crypto", messages.crypto)
+        await self._fetch_and_reply(update, "arzdigital/crypto", messages.crypto)
 
     async def _handle_currency(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
