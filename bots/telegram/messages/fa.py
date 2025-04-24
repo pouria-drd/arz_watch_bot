@@ -42,7 +42,6 @@ def help() -> str:
 
 💡 همه‌ی اطلاعات از منابع معتبر و به‌روز جمع‌آوری میشه و ربات هر چند دقیقه یکبار آپدیت میشه!
 
-
 برای انتقادات، پیشنهادات و یا گزارش خرابی و باگ به این آیدی پیام دهید:
 @pouria_drd
 """
@@ -100,7 +99,7 @@ def currency(currencies: List[Dict[str, str]], last_updated: datetime) -> str:
 
 def crypto(coins: List[Dict[str, str]], last_updated: datetime) -> str:
     date, time = persian_date_time(last_updated)
-    body = "\n".join(
+    body = "".join(
         [
             f"""
 💰 <b>{coin['name_fa']}</b> <code>({coin['symbol']})</code>
